@@ -10,11 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="terminal">
-        <div id="terminal-output"></div>
+    <div id="terminal" role="application" aria-label="Terminal emulator">
+        <div id="terminal-output" role="log" aria-live="polite"></div>
         <div id="terminal-input-line">
-            <span id="terminal-prompt"></span>
-            <input type="text" id="terminal-input" autofocus spellcheck="false">
+            <span id="terminal-prompt" aria-hidden="true"></span>
+            <input type="text" id="terminal-input" autofocus spellcheck="false" aria-label="Terminal input">
         </div>
     </div>
     
