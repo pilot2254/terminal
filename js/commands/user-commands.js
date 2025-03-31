@@ -31,13 +31,13 @@ export const userCommands = {
       }
 
       // Check if user already exists
-      const etcPasswd = getPathObject("/etc/passwd", state.fileSystem)
+      const etcPasswd = window.terminalHelpers.getPathObject("/etc/passwd", state.fileSystem)
       if (etcPasswd && etcPasswd.content.includes(`${username}:`)) {
         return `useradd: user '${username}' already exists`
       }
 
       // Create home directory
-      const homeDir = getPathObject("/home", state.fileSystem)
+      const homeDir = window.terminalHelpers.getPathObject("/home", state.fileSystem)
       if (!homeDir) {
         return "useradd: /home directory does not exist"
       }
@@ -47,13 +47,18 @@ export const userCommands = {
         return `useradd: home directory for user '${username}' already exists`
       }
 
-      // Create user's home directory
+      // Create user's home directory with proper permissions
       homeDir.contents[username] = {
         type: "directory",
         contents: {
           "welcome.txt": {
             type: "file",
             content: `Welcome, ${username}!\nThis is your home directory.`,
+          },
+          "example.md": {
+            type: "file",
+            content:
+              "# Welcome\n\nThis is your personal markdown file.\n\n## Getting Started\n\n- Try using the `ls` command to see files\n- Use `vim` to edit files\n- Use `markdown` to render this file",
           },
         },
       }
@@ -102,14 +107,14 @@ export const userCommands = {
       }
 
       // Check if user exists
-      const etcPasswd = getPathObject("/etc/passwd", state.fileSystem)
+      const etcPasswd = window.terminalHelpers.getPathObject("/etc/passwd", state.fileSystem)
       if (!etcPasswd || !etcPasswd.content.includes(`${username}:`)) {
         return `userdel: user '${username}' does not exist`
       }
 
       // Remove home directory if requested
       if (removeHome) {
-        const homeDir = getPathObject("/home", state.fileSystem)
+        const homeDir = window.terminalHelpers.getPathObject("/home", state.fileSystem)
         if (homeDir && homeDir.contents[username]) {
           delete homeDir.contents[username]
         }
@@ -133,7 +138,7 @@ export const userCommands = {
       const username = args[0] || state.currentUser
 
       // Check if user exists
-      const etcPasswd = getPathObject("/etc/passwd", state.fileSystem)
+      const etcPasswd = window.terminalHelpers.getPathObject("/etc/passwd", state.fileSystem)
       if (!etcPasswd || !etcPasswd.content.includes(`${username}:`)) {
         return `passwd: user '${username}' does not exist`
       }
@@ -151,7 +156,7 @@ export const userCommands = {
       const username = args[0] || "root"
 
       // Check if user exists
-      const etcPasswd = getPathObject("/etc/passwd", state.fileSystem)
+      const etcPasswd = window.terminalHelpers.getPathObject("/etc/passwd", state.fileSystem)
       if (!etcPasswd || !etcPasswd.content.includes(`${username}:`)) {
         return `su: user '${username}' does not exist`
       }
@@ -177,7 +182,7 @@ export const userCommands = {
     description: "List users on the system",
     usage: "users",
     action: (args, state) => {
-      const etcPasswd = getPathObject("/etc/passwd", state.fileSystem)
+      const etcPasswd = window.terminalHelpers.getPathObject("/etc/passwd", state.fileSystem)
       if (!etcPasswd) {
         return "users: cannot access /etc/passwd"
       }
@@ -188,23 +193,4 @@ export const userCommands = {
       return users.join(" ")
     },
   },
-}
-
-// Helper function to get a file system object at a path
-function getPathObject(path, fileSystem) {
-  if (path === "/") {
-    return fileSystem["/"]
-  }
-
-  const components = path.split("/").filter((c) => c !== "")
-  let current = fileSystem["/"]
-
-  for (const component of components) {
-    if (!current || current.type !== "directory" || !current.contents[component]) {
-      return null
-    }
-    current = current.contents[component]
-  }
-
-  return current
 }

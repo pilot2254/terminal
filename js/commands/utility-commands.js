@@ -147,8 +147,8 @@ DESCRIPTION
 
       const pattern = args[0]
       const filePath = args[1]
-      const normalizedPath = normalizePath(filePath, state.currentPath)
-      const file = getPathObject(normalizedPath, state.fileSystem)
+      const normalizedPath = window.terminalHelpers.normalizePath(filePath, state.currentPath)
+      const file = window.terminalHelpers.getPathObject(normalizedPath, state.fileSystem)
 
       if (!file) {
         return `grep: ${filePath}: No such file or directory`
@@ -173,60 +173,6 @@ DESCRIPTION
       }
     },
   },
-}
-
-// Helper functions
-function normalizePath(path, currentPath) {
-  // Handle absolute paths
-  if (path.startsWith("/")) {
-    // Path is already absolute
-  } else if (path.startsWith("~/")) {
-    // Replace ~ with /home/username
-    path = `/home/${window.state?.currentUser || "currentuser"}${path.substring(1)}`
-  } else {
-    // Relative path - combine with current path
-    path = `${currentPath}/${path}`
-  }
-
-  // Split path into components
-  const components = path.split("/").filter((c) => c !== "")
-  const result = []
-
-  // Process each component
-  for (const component of components) {
-    if (component === ".") {
-      // Current directory - do nothing
-    } else if (component === "..") {
-      // Parent directory - pop the last component
-      if (result.length > 0) {
-        result.pop()
-      }
-    } else {
-      // Regular component - add to result
-      result.push(component)
-    }
-  }
-
-  // Combine components back into a path
-  return `/${result.join("/")}`
-}
-
-function getPathObject(path, fileSystem) {
-  if (path === "/") {
-    return fileSystem["/"]
-  }
-
-  const components = path.split("/").filter((c) => c !== "")
-  let current = fileSystem["/"]
-
-  for (const component of components) {
-    if (!current || current.type !== "directory" || !current.contents[component]) {
-      return null
-    }
-    current = current.contents[component]
-  }
-
-  return current
 }
 
 // Import other command modules for help command

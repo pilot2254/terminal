@@ -8,8 +8,8 @@ export const fileSystemCommands = {
     usage: "ls [directory]",
     action: (args, state) => {
       const path = args[0] || state.currentPath
-      const normalizedPath = normalizePath(path, state.currentPath)
-      const directory = getPathObject(normalizedPath, state.fileSystem)
+      const normalizedPath = window.terminalHelpers.normalizePath(path, state.currentPath)
+      const directory = window.terminalHelpers.getPathObject(normalizedPath, state.fileSystem)
 
       if (!directory) {
         return `ls: cannot access '${path}': No such file or directory`
@@ -48,8 +48,8 @@ export const fileSystemCommands = {
       }
 
       const path = args[0]
-      const normalizedPath = normalizePath(path, state.currentPath)
-      const directory = getPathObject(normalizedPath, state.fileSystem)
+      const normalizedPath = window.terminalHelpers.normalizePath(path, state.currentPath)
+      const directory = window.terminalHelpers.getPathObject(normalizedPath, state.fileSystem)
 
       if (!directory) {
         return `cd: no such file or directory: ${path}`
@@ -82,14 +82,14 @@ export const fileSystemCommands = {
       }
 
       const path = args[0]
-      const parentPath = getParentPath(path, state.currentPath)
-      const dirName = getBaseName(path)
+      const parentPath = window.terminalHelpers.getParentPath(path, state.currentPath)
+      const dirName = window.terminalHelpers.getBaseName(path)
 
       if (!dirName) {
         return "mkdir: invalid directory name"
       }
 
-      const parent = getPathObject(parentPath, state.fileSystem)
+      const parent = window.terminalHelpers.getPathObject(parentPath, state.fileSystem)
 
       if (!parent) {
         return `mkdir: cannot create directory '${path}': No such file or directory`
@@ -121,14 +121,14 @@ export const fileSystemCommands = {
       }
 
       const path = args[0]
-      const parentPath = getParentPath(path, state.currentPath)
-      const fileName = getBaseName(path)
+      const parentPath = window.terminalHelpers.getParentPath(path, state.currentPath)
+      const fileName = window.terminalHelpers.getBaseName(path)
 
       if (!fileName) {
         return "touch: invalid file name"
       }
 
-      const parent = getPathObject(parentPath, state.fileSystem)
+      const parent = window.terminalHelpers.getPathObject(parentPath, state.fileSystem)
 
       if (!parent) {
         return `touch: cannot touch '${path}': No such file or directory`
@@ -159,8 +159,8 @@ export const fileSystemCommands = {
       }
 
       const path = args[0]
-      const normalizedPath = normalizePath(path, state.currentPath)
-      const file = getPathObject(normalizedPath, state.fileSystem)
+      const normalizedPath = window.terminalHelpers.normalizePath(path, state.currentPath)
+      const file = window.terminalHelpers.getPathObject(normalizedPath, state.fileSystem)
 
       if (!file) {
         return `cat: ${path}: No such file or directory`
@@ -194,14 +194,14 @@ export const fileSystemCommands = {
         targetPath = args[0]
       }
 
-      const parentPath = getParentPath(targetPath, state.currentPath)
-      const targetName = getBaseName(targetPath)
+      const parentPath = window.terminalHelpers.getParentPath(targetPath, state.currentPath)
+      const targetName = window.terminalHelpers.getBaseName(targetPath)
 
       if (!targetName) {
         return "rm: invalid operand"
       }
 
-      const parent = getPathObject(parentPath, state.fileSystem)
+      const parent = window.terminalHelpers.getPathObject(parentPath, state.fileSystem)
 
       if (!parent || !parent.contents[targetName]) {
         return `rm: cannot remove '${targetPath}': No such file or directory`
@@ -235,7 +235,7 @@ export const fileSystemCommands = {
 
       // Check if output is being redirected to a file
       const text = args.join(" ")
-      const redirectMatch = text.match(/(.*?)(?:\s+>\s+(.+))?$/)
+      const redirectMatch = text.match(/(.*?)(?:\s*>\s*(.+))?$/)
 
       if (redirectMatch && redirectMatch[2]) {
         // Extract the text and file path
@@ -243,14 +243,14 @@ export const fileSystemCommands = {
         const filePath = redirectMatch[2]
 
         // Get the parent directory and file name
-        const parentPath = getParentPath(filePath, state.currentPath)
-        const fileName = getBaseName(filePath)
+        const parentPath = window.terminalHelpers.getParentPath(filePath, state.currentPath)
+        const fileName = window.terminalHelpers.getBaseName(filePath)
 
         if (!fileName) {
           return "echo: invalid file name"
         }
 
-        const parent = getPathObject(parentPath, state.fileSystem)
+        const parent = window.terminalHelpers.getPathObject(parentPath, state.fileSystem)
 
         if (!parent) {
           return `echo: cannot write to '${filePath}': No such file or directory`
@@ -286,17 +286,17 @@ export const fileSystemCommands = {
       const destPath = args[1]
 
       // Get source file/directory
-      const normalizedSourcePath = normalizePath(sourcePath, state.currentPath)
-      const source = getPathObject(normalizedSourcePath, state.fileSystem)
+      const normalizedSourcePath = window.terminalHelpers.normalizePath(sourcePath, state.currentPath)
+      const source = window.terminalHelpers.getPathObject(normalizedSourcePath, state.fileSystem)
 
       if (!source) {
         return `cp: cannot stat '${sourcePath}': No such file or directory`
       }
 
       // Get destination parent directory
-      const destParentPath = getParentPath(destPath, state.currentPath)
-      const destName = getBaseName(destPath)
-      const destParent = getPathObject(destParentPath, state.fileSystem)
+      const destParentPath = window.terminalHelpers.getParentPath(destPath, state.currentPath)
+      const destName = window.terminalHelpers.getBaseName(destPath)
+      const destParent = window.terminalHelpers.getPathObject(destParentPath, state.fileSystem)
 
       if (!destParent) {
         return `cp: cannot create regular file '${destPath}': No such file or directory`
@@ -328,18 +328,18 @@ export const fileSystemCommands = {
       const destPath = args[1]
 
       // Get source parent and name
-      const sourceParentPath = getParentPath(sourcePath, state.currentPath)
-      const sourceName = getBaseName(sourcePath)
-      const sourceParent = getPathObject(sourceParentPath, state.fileSystem)
+      const sourceParentPath = window.terminalHelpers.getParentPath(sourcePath, state.currentPath)
+      const sourceName = window.terminalHelpers.getBaseName(sourcePath)
+      const sourceParent = window.terminalHelpers.getPathObject(sourceParentPath, state.fileSystem)
 
       if (!sourceParent || !sourceParent.contents[sourceName]) {
         return `mv: cannot stat '${sourcePath}': No such file or directory`
       }
 
       // Get destination parent directory
-      const destParentPath = getParentPath(destPath, state.currentPath)
-      const destName = getBaseName(destPath)
-      const destParent = getPathObject(destParentPath, state.fileSystem)
+      const destParentPath = window.terminalHelpers.getParentPath(destPath, state.currentPath)
+      const destName = window.terminalHelpers.getBaseName(destPath)
+      const destParent = window.terminalHelpers.getPathObject(destParentPath, state.fileSystem)
 
       if (!destParent) {
         return `mv: cannot move '${sourcePath}' to '${destPath}': No such file or directory`
@@ -356,75 +356,4 @@ export const fileSystemCommands = {
       return ""
     },
   },
-}
-
-// Helper functions for file system operations
-function normalizePath(path, currentPath) {
-  // Handle absolute paths
-  if (path.startsWith("/")) {
-    // Path is already absolute
-  } else if (path.startsWith("~/")) {
-    // Replace ~ with /home/username
-    path = `/home/${window.state?.currentUser || "currentuser"}${path.substring(1)}`
-  } else {
-    // Relative path - combine with current path
-    path = `${currentPath}/${path}`
-  }
-
-  // Split path into components
-  const components = path.split("/").filter((c) => c !== "")
-  const result = []
-
-  // Process each component
-  for (const component of components) {
-    if (component === ".") {
-      // Current directory - do nothing
-    } else if (component === "..") {
-      // Parent directory - pop the last component
-      if (result.length > 0) {
-        result.pop()
-      }
-    } else {
-      // Regular component - add to result
-      result.push(component)
-    }
-  }
-
-  // Combine components back into a path
-  return `/${result.join("/")}`
-}
-
-function getPathObject(path, fileSystem) {
-  if (path === "/") {
-    return fileSystem["/"]
-  }
-
-  const components = path.split("/").filter((c) => c !== "")
-  let current = fileSystem["/"]
-
-  for (const component of components) {
-    if (!current || current.type !== "directory" || !current.contents[component]) {
-      return null
-    }
-    current = current.contents[component]
-  }
-
-  return current
-}
-
-function getParentPath(path, currentPath) {
-  const normalizedPath = normalizePath(path, currentPath)
-  const lastSlashIndex = normalizedPath.lastIndexOf("/")
-
-  if (lastSlashIndex <= 0) {
-    return "/"
-  }
-
-  return normalizedPath.substring(0, lastSlashIndex)
-}
-
-function getBaseName(path) {
-  const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path
-  const components = normalizedPath.split("/")
-  return components[components.length - 1]
 }

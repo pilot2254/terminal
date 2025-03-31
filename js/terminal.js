@@ -440,7 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const tempFilePath = `/tmp/${tempFileName}`
 
           // Get the tmp directory
-          const tmpDir = getPathObject("/tmp", state.fileSystem)
+          const tmpDir = window.terminalHelpers.getPathObject("/tmp", state.fileSystem)
           if (tmpDir && tmpDir.type === "directory") {
             // Create the temp file
             tmpDir.contents[tempFileName] = {
@@ -485,7 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Clean up temporary files created during piping
   function cleanupTempFiles() {
-    const tmpDir = getPathObject("/tmp", state.fileSystem)
+    const tmpDir = window.terminalHelpers.getPathObject("/tmp", state.fileSystem)
     if (tmpDir && tmpDir.type === "directory") {
       // Find and remove pipe_*.tmp files
       Object.keys(tmpDir.contents).forEach((fileName) => {
@@ -564,11 +564,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const partialPath = parts[parts.length - 1]
 
     // Get the parent directory and partial filename
-    const parentPath = getParentPath(partialPath, state.currentPath)
-    const partialFileName = getBaseName(partialPath)
+    const parentPath = window.terminalHelpers.getParentPath(partialPath, state.currentPath)
+    const partialFileName = window.terminalHelpers.getBaseName(partialPath)
 
     // Get the parent directory object
-    const parentDir = getPathObject(parentPath, state.fileSystem)
+    const parentDir = window.terminalHelpers.getPathObject(parentPath, state.fileSystem)
 
     if (parentDir && parentDir.type === "directory") {
       // Find matching files/directories
@@ -625,73 +625,75 @@ document.addEventListener("DOMContentLoaded", () => {
   processCommand("banner")
 })
 
-// Helper functions for file system operations
-function getPathObject(path, fileSystem) {
-  if (path === "/") {
-    return fileSystem["/"]
-  }
-
-  const components = path.split("/").filter((c) => c !== "")
-  let current = fileSystem["/"]
-
-  for (const component of components) {
-    if (!current || current.type !== "directory" || !current.contents[component]) {
-      return null
+// Make helper functions available globally
+window.terminalHelpers = {
+  getPathObject: (path, fileSystem) => {
+    if (path === "/") {
+      return fileSystem["/"]
     }
-    current = current.contents[component]
-  }
 
-  return current
-}
+    const components = path.split("/").filter((c) => c !== "")
+    let current = fileSystem["/"]
 
-function getParentPath(path, currentPath) {
-  const normalizedPath = normalizePath(path, currentPath)
-  const lastSlashIndex = normalizedPath.lastIndexOf("/")
-
-  if (lastSlashIndex <= 0) {
-    return "/"
-  }
-
-  return normalizedPath.substring(0, lastSlashIndex)
-}
-
-function getBaseName(path) {
-  const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path
-  const components = normalizedPath.split("/")
-  return components[components.length - 1]
-}
-
-function normalizePath(path, currentPath) {
-  // Handle absolute paths
-  if (path.startsWith("/")) {
-    // Path is already absolute
-  } else if (path.startsWith("~/")) {
-    // Replace ~ with /home/username
-    path = `/home/${window.state?.currentUser || "currentuser"}${path.substring(1)}`
-  } else {
-    // Relative path - combine with current path
-    path = `${currentPath}/${path}`
-  }
-
-  // Split path into components
-  const components = path.split("/").filter((c) => c !== "")
-  const result = []
-
-  // Process each component
-  for (const component of components) {
-    if (component === ".") {
-      // Current directory - do nothing
-    } else if (component === "..") {
-      // Parent directory - pop the last component
-      if (result.length > 0) {
-        result.pop()
+    for (const component of components) {
+      if (!current || current.type !== "directory" || !current.contents[component]) {
+        return null
       }
-    } else {
-      // Regular component - add to result
-      result.push(component)
+      current = current.contents[component]
     }
-  }
 
-  // Combine components back into a path
-  return `/${result.join("/")}`
+    return current
+  },
+
+  getParentPath: (path, currentPath) => {
+    const normalizedPath = window.terminalHelpers.normalizePath(path, currentPath)
+    const lastSlashIndex = normalizedPath.lastIndexOf("/")
+
+    if (lastSlashIndex <= 0) {
+      return "/"
+    }
+
+    return normalizedPath.substring(0, lastSlashIndex)
+  },
+
+  getBaseName: (path) => {
+    const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path
+    const components = normalizedPath.split("/")
+    return components[components.length - 1]
+  },
+
+  normalizePath: (path, currentPath) => {
+    // Handle absolute paths
+    if (path.startsWith("/")) {
+      // Path is already absolute
+    } else if (path.startsWith("~/")) {
+      // Replace ~ with /home/username
+      path = `/home/${state?.currentUser || "currentuser"}${path.substring(1)}`
+    } else if (currentPath) {
+      // Relative path - combine with current path
+      path = `${currentPath}/${path}`
+    }
+
+    // Split path into components
+    const components = path.split("/").filter((c) => c !== "")
+    const result = []
+
+    // Process each component
+    for (const component of components) {
+      if (component === ".") {
+        // Current directory - do nothing
+      } else if (component === "..") {
+        // Parent directory - pop the last component
+        if (result.length > 0) {
+          result.pop()
+        }
+      } else {
+        // Regular component - add to result
+        result.push(component)
+      }
+    }
+
+    // Combine components back into a path
+    return `/${result.join("/")}`
+  },
 }

@@ -57,7 +57,7 @@ rtt min/avg/max/mdev = ${latency - 0.5}/${latency + 1.2}/${latency + 3.7}/${late
         const fileName = urlParts[urlParts.length - 1] || "index.html"
 
         // Create a simulated file in the current directory
-        const currentDir = getPathObject(state.currentPath, state.fileSystem)
+        const currentDir = window.terminalHelpers.getPathObject(state.currentPath, state.fileSystem)
 
         if (!currentDir || currentDir.type !== "directory") {
           return "wget: cannot save to current directory"
@@ -178,4 +178,3 @@ function getPathObject(path, fileSystem) {
 
   return current
 }
-

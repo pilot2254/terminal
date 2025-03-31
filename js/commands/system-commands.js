@@ -94,6 +94,9 @@ The system is going down for reboot NOW!
           bannerLine.className = "output-line"
           bannerLine.textContent = bannerResult
           output.appendChild(bannerLine)
+
+          // Focus the input after reboot
+          document.getElementById("terminal-input").focus()
         }, 1000)
       }, 2000)
 

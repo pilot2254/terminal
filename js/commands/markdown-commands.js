@@ -12,8 +12,8 @@ export const markdownCommands = {
       }
 
       const filePath = args[0]
-      const normalizedPath = normalizePath(filePath, state.currentPath)
-      const file = getPathObject(normalizedPath, state.fileSystem)
+      const normalizedPath = window.terminalHelpers.normalizePath(filePath, state.currentPath)
+      const file = window.terminalHelpers.getPathObject(normalizedPath, state.fileSystem)
 
       if (!file) {
         return `markdown: ${filePath}: No such file or directory`
@@ -84,66 +84,11 @@ function renderMarkdown(markdown) {
   // Replace blockquotes
   html = html.replace(/^\s*>\s+(.*$)/gm, "<blockquote>$1</blockquote>")
 
-  // Replace paragraphs
-  html = html.replace(/^([^<].*[^>])$/gm, "<p>$1</p>")
+  // Replace paragraphs (lines that don't start with HTML tags)
+  html = html.replace(/^(?!<[a-z])[^<].*$/gm, "<p>$&</p>")
 
   // Wrap in a div with markdown-content class
   html = `<div class="markdown-content">${html}</div>`
 
   return html
 }
-
-// Helper functions
-function normalizePath(path, currentPath) {
-  // Handle absolute paths
-  if (path.startsWith("/")) {
-    // Path is already absolute
-  } else if (path.startsWith("~/")) {
-    // Replace ~ with /home/username
-    path = `/home/${window.state?.currentUser || "currentuser"}${path.substring(1)}`
-  } else {
-    // Relative path - combine with current path
-    path = `${currentPath}/${path}`
-  }
-
-  // Split path into components
-  const components = path.split("/").filter((c) => c !== "")
-  const result = []
-
-  // Process each component
-  for (const component of components) {
-    if (component === ".") {
-      // Current directory - do nothing
-    } else if (component === "..") {
-      // Parent directory - pop the last component
-      if (result.length > 0) {
-        result.pop()
-      }
-    } else {
-      // Regular component - add to result
-      result.push(component)
-    }
-  }
-
-  // Combine components back into a path
-  return `/${result.join("/")}`
-}
-
-function getPathObject(path, fileSystem) {
-  if (path === "/") {
-    return fileSystem["/"]
-  }
-
-  const components = path.split("/").filter((c) => c !== "")
-  let current = fileSystem["/"]
-
-  for (const component of components) {
-    if (!current || current.type !== "directory" || !current.contents[component]) {
-      return null
-    }
-    current = current.contents[component]
-  }
-
-  return current
-}
-
