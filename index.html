@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Website</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="terminal">
+        <div id="terminal-output"></div>
+        <div id="terminal-input-line">
+            <span id="terminal-prompt"></span>
+            <input type="text" id="terminal-input" autofocus spellcheck="false">
+        </div>
+    </div>
+    
+    <!-- Load modules with type="module" -->
+    <script type="module" src="js/terminal.js"></script>
+</body>
+</html>
