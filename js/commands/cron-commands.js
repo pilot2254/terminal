@@ -403,3 +403,27 @@ function isValidCronSchedule(schedule) {
   return true
 }
 
+// Make cron commands available globally
+window.cronCommands = {
+  loadCronJobs: (state) => {
+    try {
+      const cronJobs = localStorage.getItem("terminalCronJobs")
+
+      if (cronJobs) {
+        state.cronJobs = JSON.parse(cronJobs)
+
+        // Update next run times
+        state.cronJobs.forEach((job) => {
+          job.nextRun = calculateNextRun(job.schedule)
+        })
+
+        // Start the cron timer
+        startCronTimer(state)
+      }
+    } catch (e) {
+      console.error("Error loading cron jobs:", e)
+      state.cronJobs = []
+    }
+  },
+}
+

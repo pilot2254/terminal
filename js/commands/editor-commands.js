@@ -249,3 +249,4 @@ function exitVimEditor(state, saved) {
   // Clear Vim state
   state.vimState = null
 }
+

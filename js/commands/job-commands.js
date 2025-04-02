@@ -225,3 +225,6 @@ export const jobCommands = {
   },
 }
 
+// Make job commands available globally
+window.jobCommands = jobCommands
+

@@ -94,3 +94,4 @@ function saveAccessibilitySettings(state) {
     console.error("Error saving accessibility settings:", e)
   }
 }
+

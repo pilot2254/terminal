@@ -2,22 +2,39 @@
  * Utility commands
  */
 
+// Fix the import statements to use window.* for the new command modules
+// Import other command modules for help command
+import { fileSystemCommands } from "./file-system.js"
+import { userCommands } from "./user-commands.js"
+import { systemCommands } from "./system-commands.js"
+import { editorCommands } from "./editor-commands.js"
+import { networkCommands } from "./network-commands.js"
+import { accessibilityCommands } from "./accessibility-commands.js"
+
 export const utilityCommands = {
   help: {
     description: "Display help for available commands",
     usage: "help [command]",
     action: (args, state) => {
       // Import all command sets
-      const COMMANDS = {
+      let COMMANDS = {
         ...fileSystemCommands,
         ...userCommands,
         ...systemCommands,
         ...utilityCommands,
         ...editorCommands,
         ...networkCommands,
-        ...markdownCommands,
         ...accessibilityCommands,
       }
+
+      // Add new command modules if they exist
+      if (window.windowCommands) COMMANDS = { ...COMMANDS, ...window.windowCommands }
+      if (window.jobCommands) COMMANDS = { ...COMMANDS, ...window.jobCommands }
+      if (window.calculatorCommands) COMMANDS = { ...COMMANDS, ...window.calculatorCommands }
+      if (window.cronCommands) COMMANDS = { ...COMMANDS, ...window.cronCommands }
+      if (window.lintCommands) COMMANDS = { ...COMMANDS, ...window.lintCommands }
+      if (window.themeCommands) COMMANDS = { ...COMMANDS, ...window.themeCommands }
+      if (window.tmuxCommands) COMMANDS = { ...COMMANDS, ...window.tmuxCommands }
 
       if (args.length === 0) {
         // List all commands
@@ -28,11 +45,16 @@ export const utilityCommands = {
           "File System": ["ls", "cd", "pwd", "mkdir", "touch", "cat", "rm", "cp", "mv", "echo"],
           "User Management": ["whoami", "useradd", "userdel", "passwd", "su", "users"],
           System: ["clear", "banner", "date", "uname", "hostname", "reboot"],
-          Utility: ["help", "man", "history", "alias", "grep"],
+          Utility: ["help", "man", "history", "alias", "grep", "calc", "bc"],
           Editor: ["vim", "nano"],
           Network: ["ping", "wget", "curl", "host"],
-          Markdown: ["markdown", "md"],
           Accessibility: ["contrast", "a11y"],
+          "Window System": ["window"],
+          "Job Control": ["jobs", "bg", "fg", "kill", "sleep"],
+          Scheduling: ["cron", "crontab"],
+          Development: ["lint"],
+          Customization: ["theme"],
+          "Terminal Multiplexer": ["tmux"],
         }
 
         for (const category in categories) {
@@ -78,7 +100,6 @@ export const utilityCommands = {
         ...utilityCommands,
         ...editorCommands,
         ...networkCommands,
-        ...markdownCommands,
         ...accessibilityCommands,
       }
 
@@ -175,11 +196,3 @@ DESCRIPTION
   },
 }
 
-// Import other command modules for help command
-import { fileSystemCommands } from "./file-system.js"
-import { userCommands } from "./user-commands.js"
-import { systemCommands } from "./system-commands.js"
-import { editorCommands } from "./editor-commands.js"
-import { networkCommands } from "./network-commands.js"
-import { markdownCommands } from "./markdown-commands.js"
-import { accessibilityCommands } from "./accessibility-commands.js"

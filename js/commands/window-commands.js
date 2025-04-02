@@ -304,3 +304,6 @@ function makeWindowResizable(windowElement) {
   }
 }
 
+// Make window commands available globally
+window.windowCommands = windowCommands
+

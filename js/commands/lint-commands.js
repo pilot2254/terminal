@@ -48,7 +48,7 @@ function getFileExtension(filePath) {
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : ""
 }
 
-// Lint JavaScript code
+// Fix the undeclared variable in lintJavaScript function
 function lintJavaScript(code, filePath) {
   const issues = []
 
@@ -69,9 +69,8 @@ function lintJavaScript(code, filePath) {
       !/^\s*function/.test(line) && // Skip function declarations
       !/^\s*if|else|for|while/.test(line) && // Skip control structures
       !/^\s*import/.test(line) && // Skip import statements
-      !/^\s*export/.test(line)
+      !/^\s*export/.test(line) // Skip export statements
     ) {
-      // Skip export statements
       issues.push({
         line: index + 1,
         column: line.length,
@@ -295,4 +294,7 @@ function lintJSON(code, filePath) {
     return `${filePath}: JSON syntax error: ${error.message}`
   }
 }
+
+// Make lint commands available globally
+window.lintCommands = lintCommands
 

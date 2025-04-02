@@ -9,8 +9,14 @@ import { systemCommands } from "./commands/system-commands.js"
 import { utilityCommands } from "./commands/utility-commands.js"
 import { editorCommands } from "./commands/editor-commands.js"
 import { networkCommands } from "./commands/network-commands.js"
-import { markdownCommands } from "./commands/markdown-commands.js"
 import { accessibilityCommands } from "./commands/accessibility-commands.js"
+import { windowCommands } from "./commands/window-commands.js"
+import { jobCommands } from "./commands/job-commands.js"
+import { calculatorCommands } from "./commands/calculator-commands.js"
+import { cronCommands } from "./commands/cron-commands.js"
+import { lintCommands } from "./commands/lint-commands.js"
+import { themeCommands } from "./commands/theme-commands.js"
+import { tmuxCommands } from "./commands/tmux-commands.js"
 
 // Combine all commands into a single object
 const COMMANDS = {
@@ -20,12 +26,160 @@ const COMMANDS = {
   ...utilityCommands,
   ...editorCommands,
   ...networkCommands,
-  ...markdownCommands,
   ...accessibilityCommands,
+  ...windowCommands,
+  ...jobCommands,
+  ...calculatorCommands,
+  ...cronCommands,
+  ...lintCommands,
+  ...themeCommands,
+  ...tmuxCommands,
 }
 
 // File system version for migrations
 const FILE_SYSTEM_VERSION = 2
+
+// Initialize file system
+function initializeFileSystem() {
+  // Load from localStorage if available
+  if (localStorage.getItem("terminalFileSystem")) {
+    try {
+      const savedData = JSON.parse(localStorage.getItem("terminalFileSystem"))
+
+      // Check version for migrations
+      if (savedData.version !== FILE_SYSTEM_VERSION) {
+        console.log(`Migrating file system from version ${savedData.version} to ${FILE_SYSTEM_VERSION}`)
+        return migrateFileSystem(savedData)
+      }
+
+      return savedData.data
+    } catch (e) {
+      console.error("Error loading file system:", e)
+    }
+  }
+
+  // Default file system structure
+  return {
+    "/": {
+      type: "directory",
+      contents: {
+        home: {
+          type: "directory",
+          contents: {
+            currentuser: {
+              type: "directory",
+              contents: {
+                "welcome.txt": {
+                  type: "file",
+                  content: 'Welcome to the terminal!\nType "help" to see available commands.',
+                },
+                "example.md": {
+                  type: "file",
+                  content:
+                    "# Markdown Example\n\nThis is an example markdown file.\n\n## Features\n\n- **Bold text**\n- *Italic text*\n- `Code snippets`\n\n### Lists\n\n1. First item\n2. Second item\n3. Third item\n\n```\ncode block\n```\n\n> Blockquote example\n\n[Link example](https://example.com)",
+                },
+              },
+            },
+          },
+        },
+        bin: {
+          type: "directory",
+          contents: {},
+        },
+        etc: {
+          type: "directory",
+          contents: {
+            passwd: {
+              type: "file",
+              content:
+                "root:x:0:0:root:/root:/bin/bash\ncurrentuser:x:1000:1000:Current User:/home/currentuser:/bin/bash",
+            },
+            hosts: {
+              type: "file",
+              content: "127.0.0.1 localhost\n142.250.190.78 google.com\n140.82.121.3 github.com",
+            },
+          },
+        },
+        tmp: {
+          type: "directory",
+          contents: {},
+        },
+      },
+    },
+  }
+}
+
+// Migrate file system between versions
+function migrateFileSystem(savedData) {
+  const oldVersion = savedData.version || 1
+  const oldData = savedData.data || savedData
+
+  // Version 1 to 2: Add example.md file
+  if (oldVersion === 1) {
+    // Make sure home/currentuser exists
+    if (oldData["/"] && oldData["/"].contents.home && oldData["/"].contents.home.contents.currentuser) {
+      // Add example.md if it doesn't exist
+      if (!oldData["/"].contents.home.contents.currentuser.contents.example) {
+        oldData["/"].contents.home.contents.currentuser.contents["example.md"] = {
+          type: "file",
+          content:
+            "# Markdown Example\n\nThis is an example markdown file.\n\n## Features\n\n- **Bold text**\n- *Italic text*\n- `Code snippets`\n\n### Lists\n\n1. First item\n2. Second item\n3. Third item\n\n```\ncode block\n```\n\n> Blockquote example\n\n[Link example](https://example.com)",
+        }
+      }
+
+      // Add hosts file if it doesn't exist
+      if (!oldData["/"].contents.etc.contents.hosts) {
+        oldData["/"].contents.etc.contents.hosts = {
+          type: "file",
+          content: "127.0.0.1 localhost\n142.250.190.78 google.com\n140.82.121.3 github.com",
+        }
+      }
+
+      // Add tmp directory if it doesn't exist
+      if (!oldData["/"].contents.tmp) {
+        oldData["/"].contents.tmp = {
+          type: "directory",
+          contents: {},
+        }
+      }
+    }
+  }
+
+  return oldData
+}
+
+// Add tmux and theme state to the terminal state
+const state = {
+  currentUser: "currentuser",
+  currentPath: "/home/currentuser",
+  previousPath: "/",
+  commandHistory: [],
+  historyIndex: -1,
+  currentInput: "",
+  fileSystem: initializeFileSystem(),
+  vimState: null,
+  highContrastMode: false,
+  accessibilityMode: false,
+  networkState: {
+    online: true,
+    hosts: {
+      "google.com": { ip: "142.250.190.78", latency: 20 },
+      "github.com": { ip: "140.82.121.3", latency: 35 },
+      localhost: { ip: "127.0.0.1", latency: 1 },
+    },
+  },
+  // Add new state properties
+  windows: [],
+  jobs: [],
+  calculatorMode: false,
+  calculatorMemory: null,
+  cronJobs: [],
+  cronTimer: null,
+  tmux: null,
+  terminalBackup: null,
+}
+
+window.state = state
 
 document.addEventListener("DOMContentLoaded", () => {
   // DOM elements
@@ -34,139 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("terminal-input")
   const promptElement = document.getElementById("terminal-prompt")
 
+  // Add this line to initialize the theme system
+  if (window.themeCommands && window.themeCommands.initializeThemeSystem) {
+    window.themeCommands.initializeThemeSystem()
+  }
+
+  // Load cron jobs
+  if (window.cronCommands && window.cronCommands.loadCronJobs) {
+    window.cronCommands.loadCronJobs(state)
+  }
+
   // Terminal state
-  const state = {
-    currentUser: "currentuser",
-    currentPath: "/home/currentuser",
-    previousPath: "/",
-    commandHistory: [],
-    historyIndex: -1,
-    currentInput: "",
-    fileSystem: initializeFileSystem(),
-    vimState: null,
-    highContrastMode: false,
-    accessibilityMode: false,
-    networkState: {
-      online: true,
-      hosts: {
-        "google.com": { ip: "142.250.190.78", latency: 20 },
-        "github.com": { ip: "140.82.121.3", latency: 35 },
-        localhost: { ip: "127.0.0.1", latency: 1 },
-      },
-    },
-  }
-
-  // Initialize file system
-  function initializeFileSystem() {
-    // Load from localStorage if available
-    if (localStorage.getItem("terminalFileSystem")) {
-      try {
-        const savedData = JSON.parse(localStorage.getItem("terminalFileSystem"))
-
-        // Check version for migrations
-        if (savedData.version !== FILE_SYSTEM_VERSION) {
-          console.log(`Migrating file system from version ${savedData.version} to ${FILE_SYSTEM_VERSION}`)
-          return migrateFileSystem(savedData)
-        }
-
-        return savedData.data
-      } catch (e) {
-        console.error("Error loading file system:", e)
-      }
-    }
-
-    // Default file system structure
-    return {
-      "/": {
-        type: "directory",
-        contents: {
-          home: {
-            type: "directory",
-            contents: {
-              currentuser: {
-                type: "directory",
-                contents: {
-                  "welcome.txt": {
-                    type: "file",
-                    content: 'Welcome to the terminal!\nType "help" to see available commands.',
-                  },
-                  "example.md": {
-                    type: "file",
-                    content:
-                      "# Markdown Example\n\nThis is an example markdown file.\n\n## Features\n\n- **Bold text**\n- *Italic text*\n- `Code snippets`\n\n### Lists\n\n1. First item\n2. Second item\n3. Third item\n\n```\ncode block\n```\n\n> Blockquote example\n\n[Link example](https://example.com)",
-                  },
-                },
-              },
-            },
-          },
-          bin: {
-            type: "directory",
-            contents: {},
-          },
-          etc: {
-            type: "directory",
-            contents: {
-              passwd: {
-                type: "file",
-                content:
-                  "root:x:0:0:root:/root:/bin/bash\ncurrentuser:x:1000:1000:Current User:/home/currentuser:/bin/bash",
-              },
-              hosts: {
-                type: "file",
-                content: "127.0.0.1 localhost\n142.250.190.78 google.com\n140.82.121.3 github.com",
-              },
-            },
-          },
-          tmp: {
-            type: "directory",
-            contents: {},
-          },
-        },
-      },
-    }
-  }
-
-  // Migrate file system between versions
-  function migrateFileSystem(savedData) {
-    const oldVersion = savedData.version || 1
-    const oldData = savedData.data || savedData
-
-    // Version 1 to 2: Add example.md file
-    if (oldVersion === 1) {
-      // Make sure home/currentuser exists
-      if (oldData["/"] && oldData["/"].contents.home && oldData["/"].contents.home.contents.currentuser) {
-        // Add example.md if it doesn't exist
-        if (!oldData["/"].contents.home.contents.currentuser.contents.example) {
-          oldData["/"].contents.home.contents.currentuser.contents["example.md"] = {
-            type: "file",
-            content:
-              "# Markdown Example\n\nThis is an example markdown file.\n\n## Features\n\n- **Bold text**\n- *Italic text*\n- `Code snippets`\n\n### Lists\n\n1. First item\n2. Second item\n3. Third item\n\n```\ncode block\n```\n\n> Blockquote example\n\n[Link example](https://example.com)",
-          }
-        }
-
-        // Add hosts file if it doesn't exist
-        if (!oldData["/"].contents.etc.contents.hosts) {
-          oldData["/"].contents.etc.contents.hosts = {
-            type: "file",
-            content: "127.0.0.1 localhost\n142.250.190.78 google.com\n140.82.121.3 github.com",
-          }
-        }
-
-        // Add tmp directory if it doesn't exist
-        if (!oldData["/"].contents.tmp) {
-          oldData["/"].contents.tmp = {
-            type: "directory",
-            contents: {},
-          }
-        }
-      }
-    }
-
-    // Save migrated data
-    saveFileSystem(oldData)
-
-    return oldData
-  }
 
   // Save file system to localStorage
   function saveFileSystem(fileSystem) {
@@ -178,7 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("terminalFileSystem", JSON.stringify(saveData))
     } catch (e) {
       console.error("Error saving file system:", e)
-      addToOutput(`<span class="error">Error saving file system: ${e.message}</span>`)
     }
   }
 
@@ -434,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // If this is not the first command, add the previous output as the last argument
       if (i > 0 && output) {
         // For commands that expect file input, we'll create a temporary file
-        if (["cat", "grep", "markdown"].includes(cmd)) {
+        if (["cat", "grep"].includes(cmd)) {
           // Create a temporary file with the output
           const tempFileName = `pipe_${Date.now()}.tmp`
           const tempFilePath = `/tmp/${tempFileName}`
@@ -697,3 +728,4 @@ window.terminalHelpers = {
     return `/${result.join("/")}`
   },
 }
+

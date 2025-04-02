@@ -243,3 +243,6 @@ function evaluateExpression(expression, variables = {}) {
   }
 }
 
+// Make calculator commands available globally
+window.calculatorCommands = calculatorCommands
+

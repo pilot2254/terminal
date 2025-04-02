@@ -178,3 +178,4 @@ function getPathObject(path, fileSystem) {
 
   return current
 }
+
